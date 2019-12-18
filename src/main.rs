@@ -1,3 +1,9 @@
+use rulinalg::vector::Vector;
+use basic_pbt_demo::{Evaluation, CommonFunctions};
+
 fn main() {
-    println!("Hello, world!");
+  let start_vector = Vector::new(vec![0.9, 0.9]);
+
+  let eval = Evaluation::new(&CommonFunctions::example_fn);
+
 }
