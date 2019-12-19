@@ -1,12 +1,14 @@
 use rulinalg::vector::Vector;
 
+pub type VectorToScalar<T> = Fn(Vector<T>, Vector<T>) -> T;
+pub type VectorToVector<T> = Fn(Vector<T>, Vector<T>) -> Vector<T>;
+
 pub struct Evaluation<'a, T: Copy> {
-   function: &'a Fn(Vector<T>, Vector<T>) -> T
+   function: &'a VectorToScalar<T>
 }
 
 impl<'a, T: Copy> Evaluation<'a, T> {
-   pub fn new<F>(f: &'a F) -> Evaluation<T>
-      where F: Fn(Vector<T>, Vector<T>) -> T {
+   pub fn new(f: &'a VectorToScalar<T>) -> Evaluation<T> {
       Evaluation {
          function: f
       }
@@ -22,6 +24,16 @@ pub struct CommonFunctions {}
 impl CommonFunctions {
    pub fn example_fn(theta: Vector<f64>, h: Vector<f64>) -> f64 {
       let theta_squared = theta.clone();
+      1.2 - (h.dot(&theta_squared.apply(&|x| { x.powi(2) })))
+   }
+
+   pub fn example_derivative(_: Vector<f64>, h: Vector<f64>) -> Vector<f64> {
+      h
+   }
+
+   pub fn actual_fn(theta: Vector<f64>, _: Vector<f64>) -> f64 {
+      let theta_squared = theta.clone();
+      let h = Vector::new(vec![1.0, 1.0]);
       1.2 - (h.dot(&theta_squared.apply(&|x| { x.powi(2) })))
    }
 }
