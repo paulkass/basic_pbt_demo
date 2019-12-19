@@ -3,22 +3,6 @@ use rulinalg::vector::Vector;
 pub type VectorToScalar<T> = Fn(Vector<T>, Vector<T>) -> T;
 pub type VectorToVector<T> = Fn(Vector<T>, Vector<T>) -> Vector<T>;
 
-pub struct Evaluation<'a, T: Copy> {
-   function: &'a VectorToScalar<T>
-}
-
-impl<'a, T: Copy> Evaluation<'a, T> {
-   pub fn new(f: &'a VectorToScalar<T>) -> Evaluation<T> {
-      Evaluation {
-         function: f
-      }
-   }
-
-   pub fn call(&self, a: Vector<T>, b: Vector<T>) -> T {
-      (self.function)(a, b)
-   }
-}
-
 pub struct CommonFunctions {}
 
 impl CommonFunctions {
@@ -40,7 +24,7 @@ impl CommonFunctions {
 
 #[test]
 fn test1() {
-   let eval = Evaluation::new(&CommonFunctions::example_fn);
-   assert_eq!(eval.call(Vector::new(vec![0.5, 0.5]), Vector::new(vec![1.0, 1.0])),
+   let eval = &CommonFunctions::example_fn;
+   assert_eq!((eval)(Vector::new(vec![0.5, 0.5]), Vector::new(vec![1.0, 1.0])),
       0.7);
 }

@@ -1,14 +1,15 @@
-
-mod PBTTrainer;
-
 use rulinalg::vector::Vector;
-use basic_pbt_demo::{Evaluation, CommonFunctions};
+use basic_pbt_demo::{CommonFunctions};
+use crate::pbt_trainer::PBTTrainer;
+
+mod pbt_trainer;
 
 fn main() {
   let start_vector = Vector::new(vec![0.9, 0.9]);
 
-  let eval_function = Evaluation::new(&CommonFunctions::example_fn);
+  let eval_function = &CommonFunctions::example_fn;
+  let derivative_function = &CommonFunctions::example_derivative;
+  let actual_function = &CommonFunctions::actual_fn;
 
-  let actual_function = Evaluation::new(&CommonFunctions::actual_fn);
-
+  let pbt = PBTTrainer::new(eval_function, derivative_function, 2);
 }
