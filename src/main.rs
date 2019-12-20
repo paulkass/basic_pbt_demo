@@ -11,11 +11,11 @@ fn main() {
   let derivative_function = Arc::new(CommonFunctions::example_derivative);
   let actual_function = Arc::new(CommonFunctions::actual_fn);
 
-  let mut pbt = PBTTrainer::new(eval_function, derivative_function, Arc::new(|state: &State| {
-    state.clone()
+  let mut pbt = PBTTrainer::new(eval_function, derivative_function, Arc::new(|state: State| {
+    state
   }), 2, 4);
 
-  let results = pbt.start(start_vector, 0.001);
+  let results = pbt.start(start_vector, 0.1);
   for result in results {
     println!("Results were {:?}", result);
   }

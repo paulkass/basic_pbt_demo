@@ -4,14 +4,13 @@ use std::sync::mpsc::channel;
 use std::thread;
 use std::vec::Vec;
 
-use spmc_buffer::{SPMCBuffer, SPMCBufferOutput};
-
 use basic_pbt_demo::{Vector, VectorToScalar, VectorToVector};
+use spmc::Receiver;
 
 pub struct PBTTrainer {
     pub heuristic: Arc<VectorToScalar<f64>>,
     pub derivative: Arc<VectorToVector<f64>>,
-    pub explore: Arc<Fn(&State) -> State + Sync + Send>,
+    pub explore: Arc<Fn(State) -> State + Sync + Send>,
     pub workers: i32,
     pub iterations: i32,
 }
@@ -19,7 +18,7 @@ pub struct PBTTrainer {
 impl PBTTrainer {
     pub fn new(heuristic: Arc<VectorToScalar<f64>>,
                derivative: Arc<VectorToVector<f64>>,
-               explore: Arc<Fn(&State) -> State + Sync + Send>,
+               explore: Arc<Fn(State) -> State + Sync + Send>,
                workers: i32,
                iterations: i32) -> PBTTrainer {
         PBTTrainer {
@@ -34,27 +33,42 @@ impl PBTTrainer {
     // Assume constant learning rate
     pub fn start(&mut self, start_vector: Vector<f64>, learning_rate: f64) -> Vec<Points> {
         let (thread_sender, main_receiver) = channel();
-        let (mut main_sender, mut thread_receiver) = SPMCBuffer::with_default(self.workers as usize).split();
+        let (mut main_sender, thread_receiver) = spmc::channel();
 
         let mut handles = Vec::new();
         let iterations = self.iterations;
-        for i in 0..self.workers {
-            let mut rx: SPMCBufferOutput<State> = thread_receiver.clone();
-            let sender = thread_sender.clone();
+        for t in 0..self.workers {
+            let rx: Receiver<State>= thread_receiver.clone();
+            let mut sender = thread_sender.clone();
             let explore = self.explore.clone();
             let derivative = self.derivative.clone();
+            let theta = start_vector.clone();
 
             let handle = thread::spawn(move || -> Points {
                 let mut points: Vec<TrainingEvent> = vec![];
 
                 let mut cur_state = State::default();
 
-                for _ in 0..iterations {
-                    let state = rx.read();
+
+                for i in 0..iterations {
+                    let state;
+                    if i == 0 {
+                        let mut initial_h = Vector::zeros();
+                        *(initial_h.get_mut(t as usize)) = 1.0;
+                        let initial_state = State {
+                            theta,
+                            h: initial_h.clone(),
+                        };
+                        state = initial_state;
+                    } else {
+                        state = rx.recv().expect("Could not receive a state from the main thread. Aborting.");
+                    }
+
+                    println!("Thread received state: {:?}", state);
 
                     // Exploit or Explore
-                    if *state != cur_state {
-                        cur_state = state.clone();
+                    if state != cur_state {
+                        cur_state = state;
                         points.push(TrainingEvent::Exploit(cur_state.theta.clone(), cur_state.h.clone()))
                     } else {
                         cur_state = (explore)(state);
@@ -63,7 +77,9 @@ impl PBTTrainer {
 
                     // Apply Gradient Descent
                     for _ in 0..4 {
-                        cur_state.theta.add(-(derivative)(cur_state.theta, cur_state.h) * learning_rate);
+                        let d = (derivative)(cur_state.theta, cur_state.h) * learning_rate;
+                        //println!("Derivative is {:?}", d);
+                        cur_state.theta = cur_state.theta.add(d);
                         points.push(TrainingEvent::Point(cur_state.theta.clone()))
                     }
 
@@ -80,19 +96,13 @@ impl PBTTrainer {
         }
         let handles = handles;
 
-        // One hot encode h
-        for i in 0..self.workers {
-            let mut h: Vector<f64> = Vector::zeros();
-            *(h.get_mut(i as usize)) = 1.0;
-
-            main_sender.write(State { theta: start_vector.clone(), h: h.clone()});
-        }
-
         for _ in 0..(self.iterations - 1) {
             let mut results = Vec::new();
             for _ in 0..self.workers {
                 results.push(main_receiver.recv().unwrap())
             }
+
+            println!("Results are {:?}", results);
 
             for k in results.iter() {
                 println!("Heuristic value is: {}", (self.heuristic)(k.theta, k.h))
@@ -104,8 +114,10 @@ impl PBTTrainer {
                 val1.partial_cmp(&val2).unwrap()
             });
 
-            let best = results.last_mut().unwrap();
-            main_sender.write(best.clone());
+            let best = results.first_mut().unwrap();
+            for _ in 0..self.workers {
+                main_sender.send(best.clone());
+            }
         }
 
         let mut results = Vec::new();
@@ -130,6 +142,7 @@ pub enum TrainingEvent {
     Explore(Vector<f64>, Vector<f64>), // theta and new h
 }
 
+#[derive(Debug)]
 pub struct State {
     pub theta: Vector<f64>,
     pub h: Vector<f64>,

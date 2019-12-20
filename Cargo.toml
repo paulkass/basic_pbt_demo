@@ -5,4 +5,4 @@ authors = ["Paul Kassianik <pkassianik@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-spmc_buffer = "0.5.1"
+spmc = "0.3.0"

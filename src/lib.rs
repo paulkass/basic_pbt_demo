@@ -12,8 +12,12 @@ impl CommonFunctions {
       1.2 - (h.dot(&theta_squared.apply(&|x| { x.powi(2) })))
    }
 
-   pub fn example_derivative(_: Vector<f64>, h: Vector<f64>) -> Vector<f64> {
-      h
+   pub fn example_derivative(theta: Vector<f64>, h: Vector<f64>) -> Vector<f64> {
+       let r = Vector {
+          a: theta.a * h.a,
+          b: theta.b * h.b
+       };
+      -r * 2.0
    }
 
    pub fn actual_fn(theta: Vector<f64>, _: Vector<f64>) -> f64 {
