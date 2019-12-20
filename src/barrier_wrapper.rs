@@ -1,4 +1,5 @@
 use std::sync::{Barrier, Arc};
+use std::slice::Iter;
 
 pub struct BarrierWrapper {
     barriers: Vec<Arc<Barrier>>
@@ -17,6 +18,10 @@ impl BarrierWrapper {
 
     pub fn get(&self, i: usize) -> &Arc<Barrier> {
         self.barriers.get(i).expect(format!("Index out of bounds: {}", i).as_str())
+    }
+
+    pub fn iter(&self) -> Iter<Arc<Barrier>> {
+        self.barriers.iter()
     }
 }
 

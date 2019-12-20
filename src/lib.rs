@@ -1,7 +1,7 @@
 use rulinalg::vector::Vector;
 
-pub type VectorToScalar<T> = Fn(Vector<T>, Vector<T>) -> T;
-pub type VectorToVector<T> = Fn(Vector<T>, Vector<T>) -> Vector<T>;
+pub type VectorToScalar<T> = dyn Fn(Vector<T>, Vector<T>) -> T;
+pub type VectorToVector<T> = dyn Fn(Vector<T>, Vector<T>) -> Vector<T>;
 
 pub struct CommonFunctions {}
 

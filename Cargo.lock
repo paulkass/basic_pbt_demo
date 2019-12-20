@@ -10,6 +10,7 @@ name = "basic_pbt_demo"
 version = "0.1.0"
 dependencies = [
  "rulinalg 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spmc_buffer 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -71,6 +72,19 @@ dependencies = [
  "num 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
+[[package]]
+name = "spmc_buffer"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "testbench 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "testbench"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
 [metadata]
 "checksum autocfg 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "1d49d90015b3c36167a20fe2810c5cd875ad504b39cff3d4eae7977e6b7c1cb2"
 "checksum matrixmultiply 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)" = "dcad67dcec2d58ff56f6292582377e6921afdf3bfbd533e26fb8900ae575e002"
@@ -80,3 +94,5 @@ dependencies = [
 "checksum num-traits 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)" = "d4c81ffc11c212fa327657cb19dd85eb7419e163b5b076bede2bdb5c974c07e4"
 "checksum rawpointer 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ebac11a9d2e11f2af219b8b8d833b76b1ea0e054aa0e8d8e9e4cbde353bdf019"
 "checksum rulinalg 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "04ada202c9685e1d72a7420c578e92b358dbf807d3dfabb676a3dab9cc3bb12f"
+"checksum spmc_buffer 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c30c70b743db0cbdfd98119c77bfd6c420853cd4cc4573ed3b92b961bf508d71"
+"checksum testbench 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2baece56440dc56ad7eed5e97dbe3f8bf79d1fae0090004ed5262e39fd82dfff"

@@ -6,3 +6,4 @@ edition = "2018"
 
 [dependencies]
 rulinalg = "0.4.2"
+spmc_buffer = "0.5.1"
