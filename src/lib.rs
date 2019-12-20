@@ -60,6 +60,14 @@ impl<T: Add<Output = T> + Mul<Output = T> + Copy + Default> Vector<T> {
       }
    }
 
+   pub fn get_mut(&mut self, i: usize) -> &mut T {
+       match i {
+          0 => &mut self.a,
+          1 => &mut self.b,
+          _ => panic!("Index out of bounds")
+       }
+   }
+
    pub fn zeros() -> Vector<T> {
       Vector {
          a: T::default(),
