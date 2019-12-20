@@ -63,7 +63,7 @@ impl PBTTrainer {
 
                     // Apply Gradient Descent
                     for _ in 0..4 {
-                        cur_state.theta.add((derivative)(cur_state.theta, cur_state.h) * learning_rate);
+                        cur_state.theta.add(-(derivative)(cur_state.theta, cur_state.h) * learning_rate);
                         points.push(TrainingEvent::Point(cur_state.theta.clone()))
                     }
 
@@ -92,6 +92,10 @@ impl PBTTrainer {
             let mut results = Vec::new();
             for _ in 0..self.workers {
                 results.push(main_receiver.recv().unwrap())
+            }
+
+            for k in results.iter() {
+                println!("Heuristic value is: {}", (self.heuristic)(k.theta, k.h))
             }
 
             results.sort_by(|a, b| {

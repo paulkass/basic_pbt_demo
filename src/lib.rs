@@ -1,4 +1,5 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, Mul, Neg};
+use std::process::Output;
 
 pub type VectorToScalar<T> = dyn Fn(Vector<T>, Vector<T>) -> T + Sync + Send;
 pub type VectorToVector<T> = dyn Fn(Vector<T>, Vector<T>) -> Vector<T> + Sync + Send;
@@ -23,12 +24,12 @@ impl CommonFunctions {
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct Vector<T: Add + Mul + Copy + Default> {
+pub struct Vector<T: Add + Mul + Neg + Copy + Default> {
    pub a: T,
    pub b: T,
 }
 
-impl<T: Add<Output = T> + Mul + Copy + Default> Add for Vector<T> {
+impl<T: Add<Output = T> + Mul + Neg + Copy + Default> Add for Vector<T> {
    type Output = Self;
 
    fn add(self, rhs: Self) -> Self {
@@ -38,17 +39,27 @@ impl<T: Add<Output = T> + Mul + Copy + Default> Add for Vector<T> {
    }
 }
 
-impl<T: Add<Output = T> + Mul<Output = T> + Copy + Default> Mul<T> for Vector<T> {
+impl<T: Add<Output = T> + Mul<Output = T> + Neg + Copy + Default> Mul<T> for Vector<T> {
    type Output = Self;
 
    fn mul(self, rhs: T) -> Self::Output {
       let a = self.a * rhs;
       let b = self.b * rhs;
-      Self::Output { a, b }
+      Self { a, b }
    }
 }
 
-impl<T: Add<Output = T> + Mul<Output = T> + Copy + Default> Vector<T> {
+impl<T: Add<Output = T> + Mul<Output = T> + Neg<Output = T> + Copy + Default> Neg for Vector<T> {
+   type Output = Self;
+
+   fn neg(self) -> Self::Output {
+       let a = -self.a;
+       let b = -self.b;
+       Self { a, b }
+   }
+}
+
+impl<T: Add<Output = T> + Mul<Output = T> + Neg + Copy + Default> Vector<T> {
    pub fn dot(&self, rhs: &Self) -> T {
       self.a * rhs.a + self.b * rhs.b
    }

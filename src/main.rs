@@ -3,7 +3,6 @@ use crate::pbt_trainer::{PBTTrainer, State};
 use std::sync::Arc;
 
 mod pbt_trainer;
-mod barrier_wrapper;
 
 fn main() {
   let start_vector = Vector { a: 0.5, b: 0.5 };
@@ -16,5 +15,8 @@ fn main() {
     state.clone()
   }), 2, 4);
 
-  let results = pbt.start(start_vector, 0.1);
+  let results = pbt.start(start_vector, 0.001);
+  for result in results {
+    println!("Results were {:?}", result);
+  }
 }
