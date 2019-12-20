@@ -1,29 +1,28 @@
-use basic_pbt_demo::{VectorToScalar, VectorToVector};
+use std::ops::{Add, Mul, MulAssign};
+use std::sync::Arc;
+use std::sync::mpsc::channel;
+use std::thread;
 use std::thread::JoinHandle;
 use std::vec::Vec;
-use rulinalg::vector::Vector;
 
-use std::thread;
-use std::sync::mpsc::channel;
 use spmc_buffer::{SPMCBuffer, SPMCBufferOutput};
 
-use std::ops::{Mul, MulAssign, Add};
-use std::sync::Arc;
+use basic_pbt_demo::{Vector, VectorToScalar, VectorToVector};
 
 pub struct PBTTrainer {
     pub heuristic: Arc<VectorToScalar<f64>>,
     pub derivative: Arc<VectorToVector<f64>>,
-    pub explore: Arc<Fn(State) -> State>,
+    pub explore: Arc<Fn(&State) -> State + Sync + Send>,
     pub workers: i32,
     pub iterations: i32,
 }
 
 impl PBTTrainer {
     pub fn new(heuristic: Arc<VectorToScalar<f64>>,
-            derivative: Arc<VectorToVector<f64>>,
-            explore: Arc<Fn(State) -> State>,
-            workers: i32,
-            iterations: i32) -> PBTTrainer {
+               derivative: Arc<VectorToVector<f64>>,
+               explore: Arc<Fn(&State) -> State + Sync + Send>,
+               workers: i32,
+               iterations: i32) -> PBTTrainer {
         PBTTrainer {
             heuristic,
             derivative,
@@ -42,25 +41,27 @@ impl PBTTrainer {
         let iterations = self.iterations;
         for i in 0..self.workers {
             let mut rx: SPMCBufferOutput<State> = thread_receiver.clone();
+            let explore = self.explore.clone();
+            let derivative = self.derivative.clone();
 
             let handle = thread::spawn(move || -> Points {
-                let mut points : Vec<TrainingEvent> = vec![];
+                let mut points: Vec<TrainingEvent> = vec![];
 
                 let mut cur_state = State::default();
 
                 for _ in 0..iterations {
-                   let state = rx.read();
+                    let state = rx.read();
 
                     if *state != cur_state {
-                       cur_state = state.clone();
+                        cur_state = state.clone();
                         points.push(TrainingEvent::Exploit(cur_state.theta.clone(), cur_state.h.clone()))
                     } else {
-                        //cur_state = (self.explore)(state);
+                        cur_state = (explore)(state);
                         points.push(TrainingEvent::Explore(cur_state.theta.clone(), cur_state.h.clone()))
                     }
 
                     for _ in 0..4 {
-                        //cur_state.theta.add((self.derivative)(cur_state.theta, cur_state.h) * learning_rate);
+                        cur_state.theta.add((derivative)(cur_state.theta, cur_state.h) * learning_rate);
                         points.push(TrainingEvent::Point(cur_state.theta.clone()))
                     }
                 }
@@ -81,25 +82,27 @@ impl PBTTrainer {
 
         let mut results = Vec::new();
         for handle in handles {
-           results.push(handle.join().unwrap());
+            results.push(handle.join().unwrap());
         }
         results
     }
 }
 
 pub struct Points {
-     pub points: Vec<TrainingEvent>
+    pub points: Vec<TrainingEvent>
 }
 
 pub enum TrainingEvent {
-    Point(Vector<f64>), // theta
-    Exploit(Vector<f64>, Vector<f64>), // theta and new h
+    Point(Vector<f64>),
+    // theta
+    Exploit(Vector<f64>, Vector<f64>),
+    // theta and new h
     Explore(Vector<f64>, Vector<f64>), // theta and new h
 }
 
 pub struct State {
     pub theta: Vector<f64>,
-    pub h: Vector<f64>
+    pub h: Vector<f64>,
 }
 
 impl Clone for State {
@@ -120,8 +123,8 @@ impl PartialEq for State {
 impl Default for State {
     fn default() -> Self {
         State {
-            theta: Vector::zeros(2),
-            h: Vector::zeros(2),
+            theta: Vector::zeros(),
+            h: Vector::zeros(),
         }
     }
 }
