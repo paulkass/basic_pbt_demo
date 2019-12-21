@@ -54,7 +54,7 @@ impl PBTTrainer {
                     let state;
                     if i == 0 {
                         let mut initial_h = Vector::zeros();
-                        *(initial_h.get_mut(t as usize)) = 1.0;
+                        *(initial_h.get_mut((t%2) as usize)) = 1.0;
                         let initial_state = State {
                             theta,
                             h: initial_h.clone(),

@@ -18,8 +18,10 @@ mod pbt_trainer;
 
 const ITERATIONS: i32 = 100;
 const STD_DEV: f64 = 0.1;
+const WORKERS: i32 = 4;
 
 fn main() {
+    // More colours than needed to accommodate more workers
     let colours = vec!["#FF0000", "#00FF00", "#0000FF", "#FF00FF", "#FFFF00", "#00FFFF", "#FFFFFF"];
     let start_vector = Vector { a: 1.0, b: 1.0 };
 
@@ -34,7 +36,7 @@ fn main() {
             theta: state.theta.apply(&normal_closure),
             h: state.h.apply(&normal_closure),
         }
-    }), 2, ITERATIONS);
+    }), WORKERS, ITERATIONS);
 
     let results = pbt.start(start_vector, 0.1);
 
@@ -77,14 +79,6 @@ fn main() {
         q_scatters.push(s);
     }
 
-    for s in data_scatters.iter() {
-        view1 = view1.add(s);
-    }
-
-    for s in q_scatters.iter() {
-        view3 = view3.add(s);
-    }
-
     let mut transition_scatters = Vec::new();
     for (i, d) in transitions.iter().enumerate() {
         let s = Scatter::from_slice(d.as_slice())
@@ -92,9 +86,18 @@ fn main() {
         transition_scatters.push(s);
     }
 
+    for s in data_scatters.iter() {
+        view1 = view1.add(s);
+    }
+
     for s in transition_scatters.iter() {
         view2 = view2.add(s);
     }
+
+    for s in q_scatters.iter() {
+        view3 = view3.add(s);
+    }
+
 
     view1 = view1
         .x_range(0.0, 1.0)
@@ -114,7 +117,7 @@ fn main() {
         .x_label("ITERATIONS")
         .y_label("Q(theta)");
 
-    let _page = Page::empty().add_plot(&view1).save("target/theta_scatter.svg");
-    let _page2 = Page::empty().add_plot(&view2).save("target/h_scatter.svg");
-    let _page3 = Page::empty().add_plot(&view3).save("target/q_lines.svg");
+    Page::empty().add_plot(&view1).save("target/theta_scatter.svg").expect("Couldn't make theta plot");
+    Page::empty().add_plot(&view2).save("target/h_scatter.svg").expect("Couldn't make h plot");
+    Page::empty().add_plot(&view3).save("target/q_lines.svg").expect("Couldn't make q plot");
 }
