@@ -20,7 +20,7 @@ impl CommonFunctions {
       -r * 2.0
    }
 
-   pub fn actual_fn(theta: Vector<f64>, _: Vector<f64>) -> f64 {
+   pub fn actual_fn(theta: Vector<f64>) -> f64 {
       let theta_squared = theta.clone();
       let h = Vector { a: 1.0, b: 1.0 };
       1.2 - (h.dot(&theta_squared.apply(&|x| { x.powi(2) })))
@@ -88,6 +88,10 @@ impl<T: Add<Output = T> + Mul<Output = T> + Neg + Copy + Default> Vector<T> {
          a: T::default(),
          b: T::default(),
       }
+   }
+
+   pub fn from_tuple((a, b): &(T,T)) -> Vector<T> {
+      Vector { a: *a, b: *b }
    }
 }
 

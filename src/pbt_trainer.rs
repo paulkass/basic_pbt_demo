@@ -39,7 +39,7 @@ impl PBTTrainer {
         let iterations = self.iterations;
         for t in 0..self.workers {
             let rx: Receiver<State>= thread_receiver.clone();
-            let mut sender = thread_sender.clone();
+            let sender = thread_sender.clone();
             let explore = self.explore.clone();
             let derivative = self.derivative.clone();
             let theta = start_vector.clone();
@@ -64,8 +64,6 @@ impl PBTTrainer {
                         state = rx.recv().expect("Could not receive a state from the main thread. Aborting.");
                     }
 
-                    println!("Thread received state: {:?}", state);
-
                     // Exploit or Explore
                     if state != cur_state {
                         cur_state = state;
@@ -84,7 +82,7 @@ impl PBTTrainer {
                     }
 
                     // Communicate results to main thread
-                    sender.send(cur_state.clone());
+                    sender.send(cur_state.clone()).expect("Could not send communications to main thread");
                 }
 
                 Points {
@@ -102,12 +100,6 @@ impl PBTTrainer {
                 results.push(main_receiver.recv().unwrap())
             }
 
-            println!("Results are {:?}", results);
-
-            for k in results.iter() {
-                println!("Heuristic value is: {}", (self.heuristic)(k.theta, k.h))
-            }
-
             results.sort_by(|a, b| {
                 let val1: f64 = (self.heuristic)(a.theta, a.h);
                 let val2: f64 = (self.heuristic)(b.theta, b.h);
@@ -116,7 +108,7 @@ impl PBTTrainer {
 
             let best = results.first_mut().unwrap();
             for _ in 0..self.workers {
-                main_sender.send(best.clone());
+                main_sender.send(best.clone()).expect("Could not send communications to sub-threads");
             }
         }
 
