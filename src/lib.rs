@@ -28,12 +28,12 @@ impl CommonFunctions {
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct Vector<T: Add + Mul + Neg + Copy + Default> {
+pub struct Vector<T> {
    pub a: T,
    pub b: T,
 }
 
-impl<T: Add<Output = T> + Mul + Neg + Copy + Default> Add for Vector<T> {
+impl<T: Add<Output = T> + Copy> Add<Self> for Vector<T> {
    type Output = Self;
 
    fn add(self, rhs: Self) -> Self {
@@ -43,7 +43,7 @@ impl<T: Add<Output = T> + Mul + Neg + Copy + Default> Add for Vector<T> {
    }
 }
 
-impl<T: Add<Output = T> + Mul<Output = T> + Neg + Copy + Default> Mul<T> for Vector<T> {
+impl<T: Mul<Output = T> + Copy> Mul<T> for Vector<T> {
    type Output = Self;
 
    fn mul(self, rhs: T) -> Self::Output {
@@ -53,7 +53,7 @@ impl<T: Add<Output = T> + Mul<Output = T> + Neg + Copy + Default> Mul<T> for Vec
    }
 }
 
-impl<T: Add<Output = T> + Mul<Output = T> + Neg<Output = T> + Copy + Default> Neg for Vector<T> {
+impl<T: Neg<Output = T> + Copy> Neg for Vector<T> {
    type Output = Self;
 
    fn neg(self) -> Self::Output {
@@ -63,12 +63,12 @@ impl<T: Add<Output = T> + Mul<Output = T> + Neg<Output = T> + Copy + Default> Ne
    }
 }
 
-impl<T: Add<Output = T> + Mul<Output = T> + Neg + Copy + Default> Vector<T> {
+impl<T: Add<Output = T> + Mul<Output = T> + Copy + Default> Vector<T> {
    pub fn dot(&self, rhs: &Self) -> T {
       self.a * rhs.a + self.b * rhs.b
    }
 
-   pub fn apply(&self, f: &Fn(T) -> T) -> Vector<T> {
+   pub fn apply(&self, f: &dyn Fn(T) -> T) -> Vector<T> {
       Vector {
          a: (f)(self.a),
          b: (f)(self.b),
